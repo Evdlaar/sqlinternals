@@ -1,19 +1,3 @@
-/*********************************************************************************************
-SQL Server Performance Tuning Course
-Module 05 Indexing
-
-(C) 2016, Enrico van de Laar
-
-Feedback: mailto:enrico@dotnine.net
-
-License: 
-	This demo script, that is part of the SQL Server Performance Tuning Course, 
-	is free to download and use for personal, educational, and internal 
-	corporate purposes, provided that this header is preserved. Redistribution or sale 
-	of this script, in whole or in part, is prohibited without the author's express 
-	written consent.
-*********************************************************************************************/
-
 /***************************************************************
 Index impact
 ***************************************************************/
@@ -25,16 +9,16 @@ Index impact
 -- I created the Index_Test database to hold our tables.
 -- Keep in mind that a SELECT INTO does not copy the indexes
 -- from the source table.
-USE [AdventureWorks]
+USE [AdventureWorks2019]
 GO
 
 SELECT *
 INTO IndexPerformance
-FROM AdventureWorks.HumanResources.Employee;
+FROM AdventureWorks2019.HumanResources.Employee;
 
 -- Let's add some more data into our table
 INSERT INTO IndexPerformance
-  SELECT * FROM AdventureWorks.HumanResources.Employee;
+  SELECT * FROM AdventureWorks2019.HumanResources.Employee;
 GO 250
 
 -- Enable statistics for analysis
@@ -99,6 +83,9 @@ SELECT
 FROM IndexPerformance
 WHERE NationalIDNumber >= '970000000' AND NationalIDNumber <= '990000000';
 
+-- Cleanup
+DROP TABLE IndexPerformance
+
 /***************************************************************
 Index key size
 ***************************************************************/
@@ -111,7 +98,8 @@ CREATE TABLE IndexKeySmall
   random_data VARCHAR(50)
   );
 
--- Insert 100.000 rows, takes around 1 minutes
+-- Insert 100.000 rows, takes around 3 minutes
+-- Disable Include Execution plan
 INSERT INTO IndexKeySmall
 	(random_data)
 VALUES
@@ -127,7 +115,7 @@ SELECT
   page_count,
   record_count
 FROM sys.dm_db_index_physical_stats
-    (DB_ID(N'AdventureWorks'), OBJECT_ID(N'IndexKeySmall'), NULL, NULL , 'DETAILED');
+    (DB_ID(N'AdventureWorks2019'), OBJECT_ID(N'IndexKeySmall'), NULL, NULL , 'DETAILED');
 
 -- Let's create another table
 -- only this time we will use the
@@ -138,7 +126,7 @@ CREATE TABLE IndexKeyLarge
   random_data VARCHAR(50)
   );
 
--- Insert 100.000 rows into this table, should take around 1 minute
+-- Insert 100.000 rows into this table, should take around 3 minute
 INSERT INTO IndexKeyLarge
   (large_ID, random_data)
 VALUES
@@ -157,7 +145,7 @@ SELECT
   page_count,
   record_count
 FROM sys.dm_db_index_physical_stats
-    (DB_ID(N'AdventureWorks'), OBJECT_ID(N'IndexKeyLarge'), NULL, NULL , 'DETAILED');
+    (DB_ID(N'AdventureWorks2019'), OBJECT_ID(N'IndexKeyLarge'), NULL, NULL , 'DETAILED');
 
 -- Cleanup
 DROP TABLE IndexKeySmall;
@@ -168,7 +156,7 @@ Included Columns
 ***************************************************************/
 -- Included columns will add the additional column data
 -- to the index page
-USE AdventureWorks
+USE AdventureWorks2019
 GO
 
 -- remove this index for a better demo
@@ -220,10 +208,7 @@ SELECT
 FROM Person.Address
 WHERE PostalCode BETWEEN '98000' and '99999';
 
-/***************************************************************
-DTA
-***************************************************************/
--- Start DTA and load adventureworks_load.trc
+
 
 /***************************************************************
 Index Usage

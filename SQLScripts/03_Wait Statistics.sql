@@ -1,19 +1,3 @@
-/*********************************************************************************************
-SQL Server Performance Tuning Course
-Module 08 Wait Statistics
-
-(C) 2016, Enrico van de Laar
-
-Feedback: mailto:enrico@dotnine.net
-
-License: 
-	This demo script, that is part of the SQL Server Performance Tuning Course, 
-	is free to download and use for personal, educational, and internal 
-	corporate purposes, provided that this header is preserved. Redistribution or sale 
-	of this script, in whole or in part, is prohibited without the author's express 
-	written consent.
-*********************************************************************************************/
-
 /***************************************************************
 Query scheduler information
 ***************************************************************/
@@ -59,7 +43,7 @@ DBCC SQLPERF ('sys.dm_os_wait_stats', CLEAR);
 
 DBCC FREEPROCCACHE
 
-USE AdventureWorks
+USE AdventureWorks2019
 
 SELECT * 
 FROM Sales.SalesOrderDetail
@@ -77,7 +61,7 @@ WHERE wait_type = 'CXPACKET'
 DBCC SQLPERF ('sys.dm_os_wait_stats', CLEAR);
 DBCC FREEPROCCACHE
 
-USE AdventureWorks
+USE AdventureWorks2019
 
 SELECT * 
 FROM Sales.SalesOrderDetail
@@ -102,20 +86,6 @@ FROM sys.dm_os_wait_stats
 WHERE wait_type = 'SOS_SCHEDULER_YIELD'
 
 
--- We are going to use Ostress to generate some workload
--- "C:\Program Files\Microsoft Corporation\RMLUtils\ostress.exe" -E -dAdventureWorks -i"C:\sos_scheduler.sql" -n20 -r1 -q
-
--- Check sys.dm_os_waiting_tasks
-SELECT *
-FROM sys.dm_os_waiting_tasks
-WHERE wait_type = 'SOS_SCHEDULER_YIELD'
-
--- Lets check the top 10 waits inside the sys.dm_os_wait_stats DMV
-SELECT TOP 10 * 
-FROM sys.dm_os_wait_stats 
-ORDER by wait_time_ms DESC
-
-
 /***************************************************************
 LCK_M_XX
 ***************************************************************/
@@ -125,7 +95,7 @@ WHERE wait_type LIKE 'LCK_M_%'
 
 -- LCK information in sys.dm_os_waiting_tasks
 -- Copy first part in new query window
-USE AdventureWorks
+USE AdventureWorks2019
 GO
 
 BEGIN TRAN
@@ -138,7 +108,7 @@ WHERE SalesOrderID = '43661'
 ROLLBACK TRAN
 
 -- Copy in second window
-SELECT * FROM AdventureWorks.Sales.SalesOrderDetail
+SELECT * FROM AdventureWorks2019.Sales.SalesOrderDetail
 
 -- Before we check sys.dm_exec_requests let's look at the request
 SELECT 
@@ -171,7 +141,7 @@ WHERE session_id > 50
 -- Check resource_associated_entity_id if needed
 SELECT * 
 FROM sys.dm_tran_locks
-WHERE resource_associated_entity_id = '72057594048479232'
+WHERE resource_associated_entity_id = '72057594051100672'
 
 /***************************************************************
 PAGEIOLATCH_XX
@@ -192,7 +162,7 @@ FROM sys.dm_os_wait_stats
 WHERE wait_type LIKE 'PAGEIOLATCH%'
 
 -- SELECT some random data
-USE AdventureWorks
+USE AdventureWorks2019
 GO
 
 SELECT *
@@ -213,7 +183,7 @@ SELECT *
 FROM sys.dm_os_wait_stats
 WHERE wait_type = 'OLEDB'
 
-DBCC CHECKDB('AdventureWorks')
+DBCC CHECKDB('AdventureWorks2019')
 
 -- Get wait statistics
 SELECT *
@@ -232,7 +202,7 @@ EXEC sp_configure 'show advanced options', 1;
 GO
 RECONFIGURE
 GO
-EXEC sp_configure 'max worker threads', 128 ;
+EXEC sp_configure 'max worker threads', 0 ;
 GO
 RECONFIGURE
 GO
@@ -244,7 +214,7 @@ FROM sys.dm_os_sys_info
 
 -- We have to create some load to THREADPOOL waits will show up
 -- We will be using ostress.exe for this, you can download it (free) from Microsoft
--- ostress command: "C:\Program Files\Microsoft Corporation\RMLUtils\ostress.exe" -E -dAdventureWorks -i"C:\random_select.sql" -n150 -r10 -q
+-- ostress command: "C:\Program Files\Microsoft Corporation\RMLUtils\ostress.exe" -E -dAdventureWorks2019 -i"C:\Query Masterclass\code\random_select.sql" -n150 -r10 -q
 
 -- While the script is running (around 3 min), check the worker count queue
 SELECT 
@@ -264,22 +234,4 @@ WHERE session_id > 50
 -- Nothing to see?
 SELECT * FROM sys.dm_os_waiting_tasks
 
-/***************************************************************
-PREEMPTIVE_OS_WRITEFILEGATHER
-***************************************************************/
-DBCC SQLPERF('sys.dm_os_wait_stats', CLEAR) 
 
-USE [master] 
-GO 
-
-ALTER DATABASE [AdventureWorks]  
-MODIFY FILE  
-  (  
-  NAME = N'AdventureWorks2014_Data',  
-  SIZE = 2048MB 
-  );
-GO 
-
-SELECT * 
-FROM sys.dm_os_wait_stats 
-WHERE wait_type = 'PREEMPTIVE_OS_WRITEFILEGATHER';

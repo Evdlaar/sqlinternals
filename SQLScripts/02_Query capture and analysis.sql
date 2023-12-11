@@ -1,19 +1,3 @@
-/*********************************************************************************************
-SQL Server Performance Tuning Course
-Module 02 Query capture and analysis
-
-(C) 2016, Enrico van de Laar
-
-Feedback: mailto:enrico@dotnine.net
-
-License: 
-	This demo script, that is part of the SQL Server Performance Tuning Course, 
-	is free to download and use for personal, educational, and internal 
-	corporate purposes, provided that this header is preserved. Redistribution or sale 
-	of this script, in whole or in part, is prohibited without the author's express 
-	written consent.
-*********************************************************************************************/
-
 /***************************************************************
 DMV Walktrough
 ***************************************************************/
@@ -101,8 +85,8 @@ Extended Events
 CREATE EVENT SESSION [XE_Demo] ON SERVER 
 ADD EVENT sqlserver.sql_statement_completed(
     ACTION(sqlserver.sql_text,sqlserver.username)
-    WHERE ([sqlserver].[database_name]=N'AdventureWorks'))
-ADD TARGET package0.event_file(SET filename=N'D:\Temp\XE_Demo.xel')
+    WHERE ([sqlserver].[database_name]=N'AdventureWorks2019'))
+ADD TARGET package0.event_file(SET filename=N'C:\Temp\XE_Demo.xel')
 WITH (STARTUP_STATE=OFF)
 GO
 
@@ -110,7 +94,7 @@ GO
 ALTER EVENT SESSION "XE_Demo" ON SERVER STATE = START
 
 -- Query against the AdventureWorks database
-USE [AdventureWorks]
+USE [AdventureWorks2019]
 
 SELECT TOP 1000 *
 FROM Sales.SalesOrderDetail
@@ -139,7 +123,7 @@ SELECT
   CAST (event_data AS XML) 
 FROM sys.fn_xe_file_target_read_file  
   (  
-  'D:\Temp\XE_Demo_0_131080266186280000.xel',  
+  'C:\Temp\XE_Demo_0_133464267754790000.xel',  
   null,  null,  null  
   ); 
 GO 
@@ -158,31 +142,3 @@ ORDER BY 'Date/Time' ASC
 
 -- Cleanup
 DROP EVENT SESSION "XE_Demo" ON SERVER
-
-/***************************************************************
-sp_whoisactive
-***************************************************************/
--- Start this query then run sp_whoisactive in another window
-USE AdventureWorks
-GO
-
-SELECT * 
-FROM Sales.SalesOrderDetailEnlarged
-ORDER BY NEWID() DESC
-
--- sp_whoisactive can also record data to a table
--- The query below adds an WhoIsActive table to the database
-DECLARE @destination_table VARCHAR(4000)
-SET @destination_table = 'WhoIsActive'
-DECLARE @schema VARCHAR(4000) 
-
-EXEC sp_WhoIsActive
-@return_schema = 1,
-@schema = @schema OUTPUT
-
-SET @schema = REPLACE(@schema, '<table_name>', @destination_table) ;
-EXEC(@schema)
-
--- Run the query against the Sales.SalesOrderDetailEnlarged table again and copy this
--- command to a new window
--- EXEC sp_WhoIsActive @destination_table = 'WhoIsActive' ;

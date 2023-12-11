@@ -1,19 +1,3 @@
-/*********************************************************************************************
-SQL Server Performance Tuning Course
-Module 07 Locking, blocking and isolation levels
-
-(C) 2016, Enrico van de Laar
-
-Feedback: mailto:enrico@dotnine.net
-
-License: 
-	This demo script, that is part of the SQL Server Performance Tuning Course, 
-	is free to download and use for personal, educational, and internal 
-	corporate purposes, provided that this header is preserved. Redistribution or sale 
-	of this script, in whole or in part, is prohibited without the author's express 
-	written consent.
-*********************************************************************************************/
-
 /***************************************************************
 Lock demonstration
 ***************************************************************/
@@ -77,7 +61,7 @@ BEGIN TRAN
 ROLLBACK
 
 -- Copy in new window and execute
-SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED
 
   SELECT City
   From Person.Address

@@ -1,19 +1,3 @@
-/*********************************************************************************************
-SQL Server Performance Tuning Course
-Module 06 Statistics
-
-(C) 2016, Enrico van de Laar
-
-Feedback: mailto:enrico@dotnine.net
-
-License: 
-	This demo script, that is part of the SQL Server Performance Tuning Course, 
-	is free to download and use for personal, educational, and internal 
-	corporate purposes, provided that this header is preserved. Redistribution or sale 
-	of this script, in whole or in part, is prohibited without the author's express 
-	written consent.
-*********************************************************************************************/
-
 /***************************************************************
 Automatic Statistics Creation
 ***************************************************************/
@@ -22,16 +6,16 @@ Automatic Statistics Creation
 -- We will fill the table with data from
 -- the AdventureWorks database so we have
 -- something to work with.
-USE [AdventureWorks]
+USE [AdventureWorks2019]
 GO
 
 SELECT *
 INTO StatsDemo
-FROM AdventureWorks.HumanResources.Employee;
+FROM AdventureWorks2019.HumanResources.Employee;
 
 -- Let's add some more data into our table
 INSERT INTO StatsDemo
-  SELECT * FROM AdventureWorks.HumanResources.Employee;
+  SELECT * FROM AdventureWorks2019.HumanResources.Employee;
 GO 250
 
 -- Check the statistics on the StatsDemo table
@@ -132,7 +116,7 @@ OPTION (RECOMPILE)
 
 -- Manually update statistics
 -- Copy statistics name in the command below
-UPDATE STATISTICS Stat_Test _WA_Sys_00000002_7E42ABEE
+UPDATE STATISTICS Stat_Test _WA_Sys_00000002_546180BB
 
 -- Run the query again
 -- Notice the change in Estimated and Actual rows
@@ -167,7 +151,7 @@ DBCC SHOW_STATISTICS ('Sales.SalesOrderDetailEnlarged', IX_SalesOrderDetailEnlar
 
 -- Let's check the Execution Plan of a query againt SalesOrderDetailEnlarged
 -- where we query the ProductID 708
--- According to the Histogram there are 122420 rows with that ID and no other
+-- According to the Histogram there are 116086 rows with that ID and no other
 -- IDs inside the Histogram step so we should get a good estimate
 SELECT ProductID FROM Sales.SalesOrderDetailEnlarged
 WHERE ProductID = 708
@@ -177,7 +161,7 @@ WHERE ProductID = 708
 DBCC SHOW_STATISTICS ('Sales.SalesOrderDetailEnlarged', IX_SalesOrderDetailEnlarged_ProductID) WITH HISTOGRAM
 
 -- The selectivity of the values inside the 916 Histogram step is 1502
--- This means the Optimizer will estimate there are 1502 rows that have an ID of 915
+-- This means the Optimizer will estimate there are 1206 rows that have an ID of 915
 -- Lets check the Execution Plan
 SELECT * FROM Sales.SalesOrderDetailEnlarged
 WHERE ProductID = 915
@@ -193,7 +177,10 @@ DBCC SHOW_STATISTICS ('Sales.SalesOrderDetailEnlarged', IX_SalesOrderDetailEnlar
 -- The Density Vector is used in various operations like a Stream Aggregate
 -- We can force an aggragate by using a GROUP BY clause
 -- The calculation the Query Optimizer uses for its estimates is 1 / Density Factor
--- In this case 1 / 0.003759398496 = 266 
+-- In this case 1 / 0.003610108 = 277 
 SELECT ProductID
 FROM Sales.SalesOrderDetailEnlarged
 GROUP BY ProductID
+
+-- Notice that the exact value doesn't match the returned number of rows though it's close
+-- Probably a statistics update will fix this
